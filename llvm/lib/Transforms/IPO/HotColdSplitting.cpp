@@ -99,11 +99,18 @@ void analyzeProfMetadata(BasicBlock *BB,
   auto TrueProb = BranchProbability::getBranchProbability(TrueWt, SumWt);
   auto FalseProb = BranchProbability::getBranchProbability(FalseWt, SumWt);
 
-  if (TrueProb <= ColdProbThresh)
-    AnnotatedColdBlocks.insert(CondBr->getSuccessor(0));
+  if (TrueProb <= ColdProbThresh) {
+    BasicBlock *TrueSucc = CondBr->getSuccessor(0);
+    // Successors may be reached from other hot blocks.
+    if (pred_size(TrueSucc) == 1)
+      AnnotatedColdBlocks.insert(TrueSucc);
+  }
 
-  if (FalseProb <= ColdProbThresh)
-    AnnotatedColdBlocks.insert(CondBr->getSuccessor(1));
+  if (FalseProb <= ColdProbThresh) {
+    BasicBlock *FalseSucc = CondBr->getSuccessor(1);
+    if (pred_size(FalseSucc) == 1)
+      AnnotatedColdBlocks.insert(FalseSucc);
+  }
 }
 
 bool unlikelyExecuted(BasicBlock &BB) {
